@@ -4,6 +4,38 @@ $LDAP_CONNECTION_WARNING = FALSE;
 
 ###################################
 
+function email_poste($email,$first_name,$last_name,$password, $method) {
+  global $POSTE_LOGIN, $POSTE_PASS , $POSTE_URL;
+  $curl = curl_init();
+  if (empty($disabled)) {
+  $data = array('email' => $email ,'name' => $first_name . ' ' . $last_name ,'passwordPlaintext' => $password);
+  } else {
+  $data = array('email' => $email ,'name' => $first_name . ' ' . $last_name ,'passwordPlaintext' => $password, 'disabled' => $disabled);
+  }
+  curl_setopt_array($curl, array(
+    CURLOPT_URL =>  $POSTE_URL,
+    CURLOPT_POSTFIELDS => $data,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_ENCODING => "",
+    CURLOPT_MAXREDIRS => 10,
+    CURLOPT_TIMEOUT => 0,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    CURLOPT_CUSTOMREQUEST => $method,
+    CURLOPT_HTTPHEADER => array(
+      'Authorization: Basic '. base64_encode($POSTE_LOGIN .":".$POSTE_PASS)
+    ),
+  ));
+  
+  $response = curl_exec($curl);
+  
+  curl_close($curl);
+  
+}
+
+
+
+
 function open_ldap_connection() {
 
  global $log_prefix, $LDAP, $SENT_HEADERS, $LDAP_DEBUG;
@@ -627,6 +659,10 @@ function ldap_new_account($ldap_connection,$first_name,$last_name,$username,$pas
     error_log("$log_prefix Created new account: $username",0);
     ldap_add_member_to_group($ldap_connection,$add_to_group,$username);
     $update_uid = @ ldap_mod_replace($ldap_connection, "cn=lastUID,${LDAP['base_dn']}", array( 'serialNumber' => $new_uid ));
+    
+    email_poste($email, $first_name, $last_name, $password, 'POST');
+   
+
     if ($update_uid) {
      error_log("$log_prefix Create account; Updated cn=lastUID with $new_uid",0);
      return TRUE;
@@ -666,7 +702,6 @@ function ldap_delete_account($ldap_connection,$username) {
 
   $delete_query = "${LDAP['account_attribute']}=" . ldap_escape($username, "", LDAP_ESCAPE_FILTER) . ",${LDAP['user_dn']}";
   $delete = @ ldap_delete($ldap_connection, $delete_query);
-
   if ($delete) {
    error_log("$log_prefix Deleted account for $username",0);
    return TRUE;
@@ -762,6 +797,7 @@ function ldap_change_password($ldap_connection,$username,$new_password) {
 
  $entries["userPassword"] = ldap_hashed_password($new_password);
  $update = @ ldap_mod_replace($ldap_connection, $this_dn, $entries);
+
 
  if ($update) {
   error_log("$log_prefix Updated the password for $username",0);

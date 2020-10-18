@@ -1,0 +1,41 @@
+version: "3.8"
+services:
+    ldap-server:
+        image: osixia/openldap:latest
+        environment:
+            LDAP_ORGANISATION: "Example Inc."
+            LDAP_DOMAIN: "example.org"
+            LDAP_BASE_DN: ""
+            LDAP_ADMIN_PASSWORD: "admin"
+            LDAP_RFC2307BIS_SCHEMA : "true"
+            LDAP_REMOVE_CONFIG_AFTER_SETUP : "true"
+            LDAP_TLS : "false"
+        ports:
+            - 389:389
+    ldap-admin:
+        build:
+            context: ./ldap-user-manager
+            dockerfile: Dockerfile
+        volumes:
+            - "./ldap-user-manager/www:/opt/ldap_user_manager"
+        links:
+            - "ldap-server:myldapserver"
+        ports: 
+            - 8080:80
+        image: wheelybird/ldap-user-manager:latest
+        environment:
+            - SERVER_HOSTNAME="localhost"
+            - LDAP_URI=ldap://ldap-server
+            - LDAP_BASE_DN=dc=example,dc=org
+            - LDAP_ADMINS_GROUP=admins
+            - LDAP_ADMIN_BIND_DN=cn=admin,dc=example,dc=org
+            - NO_HTTPS=TRUE
+            - LDAP_ADMIN_BIND_PWD=admin
+            - LDAP_REQUIRE_STARTTLS=false
+            - POSTE_LOGIN=example@email.com
+            - POSTE_PASS=password
+            - POSTE_URL=https://mail.emailserver.net/admin/api/v1/boxes
+        depends_on:
+            - ldap-server
+
+

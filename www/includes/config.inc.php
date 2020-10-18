@@ -36,6 +36,10 @@
 
  $EMAIL_DOMAIN = (getenv('EMAIL_DOMAIN') ? getenv('EMAIL_DOMAIN') : Null);
 
+ $POSTE_LOGIN = (getenv('POSTE_LOGIN') ? getenv('POSTE_LOGIN') : Null);
+ $POSTE_PASS = (getenv('POSTE_PASS') ? getenv('POSTE_PASS') : Null);
+ $POSTE_URL = (getenv('POSTE_URL') ? getenv('POSTE_URL') : Null);
+
  $LOGIN_TIMEOUT_MINS = (getenv('SESSION_TIMEOUT') ? getenv('SESSION_TIMEOUT') : 10);
  $SITE_NAME = (getenv('SITE_NAME') ? getenv('SITE_NAME') : 'LDAP user manager');
 
